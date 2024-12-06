@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+
+#define NUM_THREADS 5
+
+pthread_mutex_t mutex;  // Mutex lock to ensure synchronization
+int shared_counter = 0; // Shared resource (counter)
+
+void* increment_counter(void* thread_id) {
+    long tid = (long)thread_id;
+
+    printf("Thread %ld is attempting to increment the counter.\n", tid);
+    
+    // Locking the mutex before accessing shared resource
+    pthread_mutex_lock(&mutex);
+    
+    // Critical section: Incrementing the shared counter
+    printf("Thread %ld is inside critical section. Counter before increment: %d\n", tid, shared_counter);
+    shared_counter++;
+    printf("Thread %ld incremented the counter. New value: %d\n", tid, shared_counter);
+    
+    // Unlocking the mutex to allow other threads to access the shared resource
+    pthread_mutex_unlock(&mutex);
+
+    return NULL;
+}
+
+int main() {
+    pthread_t threads[NUM_THREADS];
+    long i;
+
+    // Initialize the mutex lock
+    pthread_mutex_init(&mutex, NULL);
+
+    // Create threads to simulate multiple processes
+    for (i = 0; i < NUM_THREADS; i++) {
+        pthread_create(&threads[i], NULL, increment_counter, (void*)i);
+    }
+
+    // Wait for all threads to complete their execution
+    for (i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    // Destroy the mutex lock
+    pthread_mutex_destroy(&mutex);
+
+    // Final value of shared counter
+    printf("Final counter value: %d\n", shared_counter);
+
+    return 0;
+}
