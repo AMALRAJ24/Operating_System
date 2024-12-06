@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <unistd.h>
+
+sem_t mutex, write_sem, read_count_sem;
+int read_count = 0; 
+int data = 0; 
+
+void *reader(void *arg) {
+    int reader_id = *((int *)arg);
+
+  
+    sem_wait(&mutex); 
+    read_count++;
+    if (read_count == 1) {
+        sem_wait(&write_sem); 
+    }
+    sem_post(&mutex); // Release the mutex
+
+    printf("Reader %d: Reading data: %d\n", reader_id, data);
+    sleep(1); 
+
+    sem_wait(&mutex); 
+    read_count--;
+    if (read_count == 0) {
+        sem_post(&write_sem); 
+    }
+    sem_post(&mutex); // Release the mutex
+
+    return NULL;
+}
+
+void *writer(void *arg) {
+    int writer_id = *((int *)arg);
+
+    sem_wait(&write_sem); 
+
+    printf("Writer %d: Writing data: %d\n", writer_id, writer_id); 
+    data = writer_id; 
+    sleep(2);
+
+    sem_post(&write_sem); 
+
+    return NULL;
+}
+
+int main() {
+    pthread_t readers[5], writers[3];
+    int reader_ids[5] = {1, 2, 3, 4, 5};
+    int writer_ids[3] = {1, 2, 3};
+
+    sem_init(&mutex, 0, 1);        
+    sem_init(&write_sem, 0, 1);     
+    sem_init(&read_count_sem, 0, 1); 
+    for (int i = 0; i < 5; i++) {
+        pthread_create(&readers[i], NULL, reader, &reader_ids[i]);
+    }
+    for (int i = 0; i < 3; i++) {
+        pthread_create(&writers[i], NULL, writer, &writer_ids[i]);
+    }
+
+    for (int i = 0; i < 5; i++) {
+        pthread_join(readers[i], NULL);
+    }
+    for (int i = 0; i < 3; i++) {
+        pthread_join(writers[i], NULL);
+    }
+
+    sem_destroy(&mutex);
+    sem_destroy(&write_sem);
+    sem_destroy(&read_count_sem);
+
+    return 0;
+}
