@@ -1,0 +1,72 @@
+#include <stdio.h>
+
+void calculateTimes(int n, int burstTime[], int timeQuantum) {
+    int waitingTime[n], turnAroundTime[n], remainingTime[n];
+    int currentTime = 0, completedProcesses = 0, i;
+    float totalWaitingTime = 0, totalTurnAroundTime = 0;
+
+   
+    for (i = 0; i < n; i++) {
+        remainingTime[i] = burstTime[i];
+    }
+
+    printf("\nExecution order:\n");
+
+    while (completedProcesses < n) {
+        for (i = 0; i < n; i++) {
+            if (remainingTime[i] > 0) {
+                printf("Process %d (time %d to ", i + 1, currentTime);
+
+                if (remainingTime[i] > timeQuantum) {
+                    currentTime += timeQuantum;
+                    remainingTime[i] -= timeQuantum;
+                } else {
+                    currentTime += remainingTime[i];
+                    remainingTime[i] = 0;
+                    completedProcesses++;
+                    waitingTime[i] = currentTime - burstTime[i];
+                    turnAroundTime[i] = currentTime;
+                }
+
+                printf("%d)\n", currentTime);
+            }
+        }
+    }
+
+    
+    for (i = 0; i < n; i++) {
+        totalWaitingTime += waitingTime[i];
+        totalTurnAroundTime += turnAroundTime[i];
+    }
+
+    
+    printf("\nProcess\tBurst Time\tWaiting Time\tTurnaround Time\n");
+    for (i = 0; i < n; i++) {
+        printf("P%d\t%d\t\t%d\t\t%d\n", i + 1, burstTime[i], waitingTime[i], turnAroundTime[i]);
+    }
+
+    printf("\nAverage Waiting Time: %.2f\n", totalWaitingTime / n);
+    printf("Average Turnaround Time: %.2f\n", totalTurnAroundTime / n);
+}
+
+int main() {
+    int n, i, timeQuantum;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    int burstTime[n];
+
+    printf("Enter the burst time for each process:\n");
+    for (i = 0; i < n; i++) {
+        printf("P%d: ", i + 1);
+        scanf("%d", &burstTime[i]);
+    }
+
+    printf("Enter the time quantum: ");
+    scanf("%d", &timeQuantum);
+
+    calculateTimes(n, burstTime, timeQuantum);
+
+    return 0;
+}
