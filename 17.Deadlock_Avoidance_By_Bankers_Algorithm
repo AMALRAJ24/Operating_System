@@ -1,0 +1,114 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+#define MAX_PROCESSES 10
+#define MAX_RESOURCES 10
+
+void displayMatrix(int matrix[MAX_PROCESSES][MAX_RESOURCES], int processes, int resources, const char *name) {
+    printf("\n%s Matrix:\n", name);
+    for (int i = 0; i < processes; i++) {
+        for (int j = 0; j < resources; j++) {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+bool isSafeState(int processes, int resources, 
+                 int available[], 
+                 int max[MAX_PROCESSES][MAX_RESOURCES], 
+                 int allocation[MAX_PROCESSES][MAX_RESOURCES], 
+                 int need[MAX_PROCESSES][MAX_RESOURCES]) {
+    int work[MAX_RESOURCES];
+    bool finish[MAX_PROCESSES] = {false};
+
+    for (int i = 0; i < resources; i++) {
+        work[i] = available[i];
+    }
+
+    int safeSequence[MAX_PROCESSES];
+    int count = 0;
+
+    while (count < processes) {
+        bool found = false;
+        for (int i = 0; i < processes; i++) {
+            if (!finish[i]) {
+                bool canProceed = true;
+                for (int j = 0; j < resources; j++) {
+                    if (need[i][j] > work[j]) {
+                        canProceed = false;
+                        break;
+                    }
+                }
+                if (canProceed) {
+                    // Process can proceed
+                    for (int k = 0; k < resources; k++) {
+                        work[k] += allocation[i][k];
+                    }
+                    safeSequence[count++] = i;
+                    finish[i] = true;
+                    found = true;
+                }
+            }
+        }
+
+        if (!found) {
+            // If no process can proceed, system is not in a safe state
+            printf("\nThe system is in an unsafe state!\n");
+            return false;
+        }
+    }
+
+    printf("\nThe system is in a safe state.\nSafe Sequence: ");
+    for (int i = 0; i < processes; i++) {
+        printf("P%d ", safeSequence[i]);
+    }
+    printf("\n");
+    return true;
+}
+
+int main() {
+    int processes, resources;
+    int allocation[MAX_PROCESSES][MAX_RESOURCES];
+    int max[MAX_PROCESSES][MAX_RESOURCES];
+    int need[MAX_PROCESSES][MAX_RESOURCES];
+    int available[MAX_RESOURCES];
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &processes);
+    printf("Enter the number of resources: ");
+    scanf("%d", &resources);
+
+    printf("\nEnter the Allocation Matrix:\n");
+    for (int i = 0; i < processes; i++) {
+        for (int j = 0; j < resources; j++) {
+            scanf("%d", &allocation[i][j]);
+        }
+    }
+
+    printf("\nEnter the Max Matrix:\n");
+    for (int i = 0; i < processes; i++) {
+        for (int j = 0; j < resources; j++) {
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    printf("\nEnter the Available Resources:\n");
+    for (int i = 0; i < resources; i++) {
+        scanf("%d", &available[i]);
+    }
+
+    for (int i = 0; i < processes; i++) {
+        for (int j = 0; j < resources; j++) {
+            need[i][j] = max[i][j] - allocation[i][j];
+        }
+    }
+
+    displayMatrix(allocation, processes, resources, "Allocation");
+    displayMatrix(max, processes, resources, "Max");
+    displayMatrix(need, processes, resources, "Need");
+
+    isSafeState(processes, resources, available, max, allocation, need);
+
+    return 0;
+}
