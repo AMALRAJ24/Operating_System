@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <string.h>
+#include <stdlib.h>
+
+int main() {
+    int fd;
+    struct stat fileStat;
+    struct flock lock;
+    DIR *dir;
+    struct dirent *entry;
+
+    fd = open("example.txt", O_CREAT | O_RDWR, 0644);
+    if (fd < 0) {
+        perror("Error opening file");
+        exit(1);
+    }
+    printf("File opened successfully.\n");
+
+    lock.l_type = F_WRLCK;  // Write lock
+    lock.l_whence = SEEK_SET;
+    lock.l_start = 0;       // Lock entire file
+    lock.l_len = 0;
+
+    if (fcntl(fd, F_SETLK, &lock) == -1) {
+        perror("Error applying lock");
+        close(fd);
+        exit(1);
+    }
+    printf("File locked successfully.\n");
+
+    lseek(fd, 0, SEEK_END); // Move to the end of the file
+    write(fd, "Appending data to file.\n", 24); // Write new data
+    printf("Data written to the file.\n");
+
+    lseek(fd, 0, SEEK_SET); // Move back to the start of the file
+    printf("File pointer reset to the beginning.\n");
+
+    if (stat("example.txt", &fileStat) == -1) {
+        perror("Error getting file information");
+        close(fd);
+        exit(1);
+    }
+    printf("File Size: %ld bytes\n", fileStat.st_size);
+    printf("File Permissions: %o\n", fileStat.st_mode & 0777);
+    printf("Last Access Time: %ld\n", fileStat.st_atime);
+
+    dir = opendir(".");
+    if (!dir) {
+        perror("Error opening directory");
+        close(fd);
+        exit(1);
+    }
+
+    printf("Directory contents:\n");
+    while ((entry = readdir(dir)) != NULL) {
+        printf("  %s\n", entry->d_name);
+    }
+
+    // Close directory
+    closedir(dir);
+    printf("Directory closed.\n");
+
+    lock.l_type = F_UNLCK;  // Unlock file
+    if (fcntl(fd, F_SETLK, &lock) == -1) {
+        perror("Error unlocking file");
+    }
+    close(fd);
+    printf("File closed and lock released.\n");
+
+    return 0;
+}
