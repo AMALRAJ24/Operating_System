@@ -1,0 +1,63 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+void simulateFIFO(int pages[], int n, int frames[], int frameCount) {
+    int pageFaults = 0;
+    int nextToReplace = 0; 
+    bool found;
+
+    printf("\nReference String\tFrames\n");
+    for (int i = 0; i < n; i++) {
+        found = false;
+
+        for (int j = 0; j < frameCount; j++) {
+            if (frames[j] == pages[i]) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            frames[nextToReplace] = pages[i];
+            nextToReplace = (nextToReplace + 1) % frameCount;
+            pageFaults++;
+        }
+
+        printf("%d\t\t\t", pages[i]);
+        for (int j = 0; j < frameCount; j++) {
+            if (frames[j] != -1) {
+                printf("%d ", frames[j]);
+            } else {
+                printf("- ");
+            }
+        }
+        printf("\n");
+    }
+
+    printf("\nTotal Page Faults: %d\n", pageFaults);
+}
+
+int main() {
+    int n, frameCount;
+
+    printf("Enter the number of pages: ");
+    scanf("%d", &n);
+
+    int pages[n];
+    printf("Enter the page reference string:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &pages[i]);
+    }
+
+    printf("Enter the number of frames: ");
+    scanf("%d", &frameCount);
+
+    int frames[frameCount];
+    for (int i = 0; i < frameCount; i++) {
+        frames[i] = -1;
+    }
+
+    simulateFIFO(pages, n, frames, frameCount);
+
+    return 0;
+}
