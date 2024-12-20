@@ -1,0 +1,41 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+// Function to calculate total head movement
+void fcfsDiskScheduling(int requests[], int n, int head) {
+    int totalHeadMovement = 0;
+
+    printf("\nDisk Scheduling Order:\n");
+    printf("%d", head);
+
+    for (int i = 0; i < n; i++) {
+        // Calculate the absolute distance between the current head and the next request
+        totalHeadMovement += abs(requests[i] - head);
+        head = requests[i];
+        printf(" -> %d", head);
+    }
+
+    printf("\n\nTotal Head Movement: %d\n", totalHeadMovement);
+}
+
+int main() {
+    int n, head;
+
+    printf("Enter the number of disk requests: ");
+    scanf("%d", &n);
+
+    int requests[n];
+    printf("Enter the disk requests (space-separated): ");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter the initial position of the disk head: ");
+    scanf("%d", &head);
+
+    // Call the FCFS Disk Scheduling function
+    fcfsDiskScheduling(requests, n, head);
+
+    return 0;
+}
