@@ -1,0 +1,135 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_BLOCKS 100 // Maximum number of blocks on the disk
+
+// Structure to represent a disk block
+typedef struct Block {
+    int blockNumber;         // Block number
+    char data[100];          // Data stored in the block
+    struct Block *nextBlock; // Pointer to the next block
+} Block;
+
+// Structure to represent a file
+typedef struct {
+    Block *startBlock;       // Pointer to the first block
+    Block *endBlock;         // Pointer to the last block
+    int blockCount;          // Total number of blocks in the file
+} File;
+
+// Array to simulate free and allocated blocks
+int freeBlocks[MAX_BLOCKS] = {0}; // 0 means free, 1 means allocated
+
+// Allocate a free block
+Block *allocateBlock(int totalBlocks) {
+    for (int i = 0; i < totalBlocks; i++) {
+        if (freeBlocks[i] == 0) {
+            freeBlocks[i] = 1;
+            Block *block = (Block *)malloc(sizeof(Block));
+            block->blockNumber = i;
+            block->nextBlock = NULL;
+            return block;
+        }
+    }
+    return NULL; // No free block available
+}
+
+// Create a file using linked allocation
+void createFile(File *file, int blockCount, int totalBlocks) {
+    if (blockCount > totalBlocks) {
+        printf("Error: Not enough blocks available.\n");
+        return;
+    }
+
+    file->startBlock = NULL;
+    file->endBlock = NULL;
+    file->blockCount = 0;
+
+    for (int i = 0; i < blockCount; i++) {
+        Block *newBlock = allocateBlock(totalBlocks);
+        if (!newBlock) {
+            printf("Error: Could not allocate all requested blocks.\n");
+            return;
+        }
+
+        printf("Block %d allocated.\n", newBlock->blockNumber);
+
+        if (file->startBlock == NULL) {
+            // First block of the file
+            file->startBlock = newBlock;
+        } else {
+            // Link the new block to the file
+            file->endBlock->nextBlock = newBlock;
+        }
+
+        // Update the last block and block count
+        file->endBlock = newBlock;
+        file->blockCount++;
+    }
+
+    printf("File created successfully with %d blocks.\n", file->blockCount);
+}
+
+// Display file information
+void displayFile(File *file) {
+    if (file->startBlock == NULL) {
+        printf("The file is empty.\n");
+        return;
+    }
+
+    printf("\nFile Information:\n");
+    printf("Blocks: ");
+    Block *current = file->startBlock;
+    while (current != NULL) {
+        printf("%d -> ", current->blockNumber);
+        current = current->nextBlock;
+    }
+    printf("NULL\n");
+    printf("Total Blocks: %d\n", file->blockCount);
+}
+
+// Simulate the file system
+int main() {
+    int totalBlocks;
+
+    printf("Enter the total number of blocks on the disk: ");
+    scanf("%d", &totalBlocks);
+
+    if (totalBlocks > MAX_BLOCKS) {
+        printf("Error: Maximum number of blocks exceeded.\n");
+        return 1;
+    }
+
+    File file;
+    int choice, blockCount;
+
+    while (1) {
+        printf("\nFile System Menu:\n");
+        printf("1. Create File\n");
+        printf("2. Display File Information\n");
+        printf("3. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter the number of blocks required for the file: ");
+                scanf("%d", &blockCount);
+                createFile(&file, blockCount, totalBlocks);
+                break;
+
+            case 2:
+                displayFile(&file);
+                break;
+
+            case 3:
+                printf("Exiting the program.\n");
+                exit(0);
+
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+
+    return 0;
+}
