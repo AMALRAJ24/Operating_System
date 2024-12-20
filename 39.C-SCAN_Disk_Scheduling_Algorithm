@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Function to simulate C-SCAN algorithm
+void C_SCAN(int arr[], int n, int head, int disk_size) {
+    int i, distance, total_distance = 0;
+
+    // Sort the request array
+    for (i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (arr[i] > arr[j]) {
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+    }
+
+    // Find the position of the head in the sorted array
+    int pos = -1;
+    for (i = 0; i < n; i++) {
+        if (arr[i] >= head) {
+            pos = i;
+            break;
+        }
+    }
+
+    // Service requests to the right of head
+    for (i = pos; i < n; i++) {
+        distance = abs(arr[i] - head);
+        total_distance += distance;
+        head = arr[i];
+    }
+
+    // Jump to the beginning of the disk
+    total_distance += abs(disk_size - 1 - head);
+    head = 0;
+
+    // Service requests to the left of the original head position
+    for (i = 0; i < pos; i++) {
+        distance = abs(arr[i] - head);
+        total_distance += distance;
+        head = arr[i];
+    }
+
+    printf("Total head movement = %d\n", total_distance);
+}
+
+int main() {
+    int n, i, head, disk_size;
+
+    printf("Enter the number of disk requests: ");
+    scanf("%d", &n);
+
+    int arr[n];
+    printf("Enter the disk requests: ");
+    for (i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    printf("Enter the initial head position: ");
+    scanf("%d", &head);
+
+    printf("Enter the total disk size: ");
+    scanf("%d", &disk_size);
+
+    C_SCAN(arr, n, head, disk_size);
+
+    return 0;
+}
