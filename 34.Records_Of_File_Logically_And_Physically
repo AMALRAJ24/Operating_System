@@ -1,0 +1,103 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_RECORDS 100
+#define MAX_RECORD_SIZE 100
+
+// Structure for a file record
+typedef struct {
+    int id;                     // Record ID
+    char data[MAX_RECORD_SIZE]; // Record data
+} Record;
+
+// Simulate sequential file allocation
+typedef struct {
+    Record records[MAX_RECORDS];
+    int recordCount; // Total number of records
+} File;
+
+void addRecord(File *file, int id, char data[]) {
+    if (file->recordCount >= MAX_RECORDS) {
+        printf("Error: File is full. Cannot add more records.\n");
+        return;
+    }
+    file->records[file->recordCount].id = id;
+    strcpy(file->records[file->recordCount].data, data);
+    file->recordCount++;
+    printf("Record with ID %d added successfully.\n", id);
+}
+
+void readFile(File *file) {
+    if (file->recordCount == 0) {
+        printf("The file is empty.\n");
+        return;
+    }
+    printf("\nReading File:\n");
+    for (int i = 0; i < file->recordCount; i++) {
+        printf("Record %d: ID = %d, Data = %s\n", i + 1, file->records[i].id, file->records[i].data);
+    }
+}
+
+void accessRecord(File *file, int id) {
+    if (file->recordCount == 0) {
+        printf("The file is empty. No records to access.\n");
+        return;
+    }
+    printf("\nAccessing Record with ID %d:\n", id);
+    for (int i = 0; i < file->recordCount; i++) {
+        printf("Reading Record %d: ID = %d, Data = %s\n", i + 1, file->records[i].id, file->records[i].data);
+        if (file->records[i].id == id) {
+            printf("Record found! ID = %d, Data = %s\n", file->records[i].id, file->records[i].data);
+            return;
+        }
+    }
+    printf("Record with ID %d not found.\n", id);
+}
+
+int main() {
+    File file;
+    file.recordCount = 0;
+
+    int choice, id;
+    char data[MAX_RECORD_SIZE];
+
+    while (1) {
+        printf("\nFile System Menu:\n");
+        printf("1. Add Record\n");
+        printf("2. Read File\n");
+        printf("3. Access Record by ID\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                printf("Enter Record ID: ");
+                scanf("%d", &id);
+                printf("Enter Record Data: ");
+                scanf(" %[^\n]", data); // Read string with spaces
+                addRecord(&file, id, data);
+                break;
+
+            case 2:
+                readFile(&file);
+                break;
+
+            case 3:
+                printf("Enter Record ID to Access: ");
+                scanf("%d", &id);
+                accessRecord(&file, id);
+                break;
+
+            case 4:
+                printf("Exiting the program.\n");
+                exit(0);
+
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+
+    return 0;
+}
