@@ -1,0 +1,100 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
+
+void display_permissions(mode_t perm) {
+    printf("Permissions: ");
+    printf((perm & S_IRUSR) ? "r" : "-");
+    printf((perm & S_IWUSR) ? "w" : "-");
+    printf((perm & S_IXUSR) ? "x" : "-");
+    printf((perm & S_IRGRP) ? "r" : "-");
+    printf((perm & S_IWGRP) ? "w" : "-");
+    printf((perm & S_IXGRP) ? "x" : "-");
+    printf((perm & S_IROTH) ? "r" : "-");
+    printf((perm & S_IWOTH) ? "w" : "-");
+    printf((perm & S_IXOTH) ? "x" : "-");
+    printf("\n");
+}
+
+void display_file_info(const char *filename) {
+    struct stat file_stat;
+
+    if (stat(filename, &file_stat) == -1) {
+        perror("Error reading file stats");
+        return;
+    }
+
+    // Display file owner, group and permissions
+    struct passwd *pw = getpwuid(file_stat.st_uid);
+    struct group *gr = getgrgid(file_stat.st_gid);
+
+    printf("File: %s\n", filename);
+    printf("Owner: %s\n", pw ? pw->pw_name : "Unknown");
+    printf("Group: %s\n", gr ? gr->gr_name : "Unknown");
+    
+    // Display permissions
+    display_permissions(file_stat.st_mode);
+}
+
+int main() {
+    char filename[256];
+    int choice;
+
+    // User input for the filename
+    printf("Enter the filename to check permissions: ");
+    scanf("%s", filename);
+
+    // Display current file information
+    display_file_info(filename);
+
+    printf("\nDo you want to change the permissions?\n");
+    printf("1. Yes\n2. No\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        int new_perm;
+        printf("\nEnter the new permission (numeric format, e.g., 755): ");
+        scanf("%d", &new_perm);
+
+        // Changing file permissions
+        if (chmod(filename, new_perm) == -1) {
+            perror("Error changing file permissions");
+            return -1;
+        }
+        printf("Permissions successfully changed.\n");
+
+        // Display updated file information
+        display_file_info(filename);
+    }
+
+    printf("\nDo you want to change the file owner?\n");
+    printf("1. Yes\n2. No\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    if (choice == 1) {
+        char owner[256], group[256];
+
+        printf("\nEnter the new owner name: ");
+        scanf("%s", owner);
+        printf("Enter the new group name: ");
+        scanf("%s", group);
+
+        // Change file owner and group
+        if (chown(filename, getpwnam(owner)->pw_uid, getgrnam(group)->gr_gid) == -1) {
+            perror("Error changing file owner");
+            return -1;
+        }
+        printf("File owner and group successfully changed.\n");
+
+        // Display updated file information
+        display_file_info(filename);
+    }
+
+    return 0;
+}
